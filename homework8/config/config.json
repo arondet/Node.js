@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "root",
+    "password": "root123",
+    "database": "books_db",
+    "host": "localhost",
+    "dialect": "mysql"
+  }
+}

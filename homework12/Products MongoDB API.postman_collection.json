@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "Products MongoDB API",
+    "description": "Домашняя работа 12 — CRUD для коллекции products (MongoDB) и обработка ошибок. Запускайте запросы по порядку: POST сохраняет ID нового продукта в переменную productId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "productId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "CRUD",
+      "item": [
+        {
+          "name": "POST /products",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptop\",\n  \"price\": 1200,\n  \"description\": \"Gaming laptop\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/products"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 201', () => pm.response.to.have.status(201));",
+            "const p = pm.response.json();",
+            "pm.test('Продукт создан', () => {",
+            "  pm.expect(p._id).to.be.a('string');",
+            "  pm.expect(p.name).to.eql('Laptop');",
+            "  pm.expect(p.price).to.eql(1200);",
+            "  pm.expect(p.description).to.eql('Gaming laptop');",
+            "});",
+            "pm.collectionVariables.set('productId', p._id);"
+          ] } }]
+        },
+        {
+          "name": "GET /products",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+            "pm.test('Возвращается массив', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ] } }]
+        },
+        {
+          "name": "GET /products/:id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products/{{productId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+            "pm.test('Найден нужный продукт', () => pm.expect(pm.response.json()._id).to.eql(pm.collectionVariables.get('productId')));"
+          ] } }]
+        },
+        {
+          "name": "PUT /products/:id",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 999,\n  \"description\": \"Gaming laptop (sale)\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/products/{{productId}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+            "pm.test('Продукт обновлён', () => {",
+            "  const p = pm.response.json();",
+            "  pm.expect(p.price).to.eql(999);",
+            "  pm.expect(p.description).to.eql('Gaming laptop (sale)');",
+            "});"
+          ] } }]
+        },
+        {
+          "name": "DELETE /products/:id",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/products/{{productId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+            "pm.test('Продукт удалён', () => pm.expect(pm.response.json().message).to.eql('Product deleted'));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Ошибки",
+      "item": [
+        {
+          "name": "POST без name → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 10\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/products"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 400', () => pm.response.to.have.status(400));",
+            "pm.test('Есть сообщение об ошибке', () => pm.expect(pm.response.json().message).to.include('name'));"
+          ] } }]
+        },
+        {
+          "name": "POST с price строкой → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test\",\n  \"price\": \"abc\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/products"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 400', () => pm.response.to.have.status(400));",
+            "pm.test('Есть сообщение об ошибке', () => pm.expect(pm.response.json().message).to.include('price'));"
+          ] } }]
+        },
+        {
+          "name": "POST с битым JSON → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test\",\n", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/products"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 400', () => pm.response.to.have.status(400));",
+            "pm.test('Сообщение о неверном JSON', () => pm.expect(pm.response.json().message).to.eql('Invalid JSON in request body'));"
+          ] } }]
+        },
+        {
+          "name": "GET с неверным ID → 400",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products/123" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 400', () => pm.response.to.have.status(400));",
+            "pm.test('Сообщение о неверном ID', () => pm.expect(pm.response.json().message).to.eql('Invalid product ID'));"
+          ] } }]
+        },
+        {
+          "name": "GET несуществующего продукта → 404",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products/000000000000000000000000" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 404', () => pm.response.to.have.status(404));",
+            "pm.test('Сообщение Product not found', () => pm.expect(pm.response.json().message).to.eql('Product not found'));"
+          ] } }]
+        },
+        {
+          "name": "PUT с пустым телом → 400",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/products/000000000000000000000000"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Статус 400', () => pm.response.to.have.status(400));"
+          ] } }]
+        }
+      ]
+    }
+  ]
+}

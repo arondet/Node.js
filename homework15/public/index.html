@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    #messages {
+      list-style: none;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #messages li {
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      background: #eef6ee;
+      border-radius: 4px;
+    }
+
+    #messages li small {
+      color: #666;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 8px;
+    }
+
+    button {
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Chat</h1>
+
+  <!-- Область для отображения подтверждений от сервера -->
+  <ul id="messages"></ul>
+
+  <!-- Поле ввода и кнопка отправки -->
+  <form id="chatForm">
+    <input id="messageInput" type="text" placeholder="Type a message..." autocomplete="off">
+    <button type="submit">Send Message</button>
+  </form>
+
+  <!-- Клиентская библиотека Socket.io (её отдаёт сам сервер) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Подключаемся к серверу
+    const socket = io();
+
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('messageInput');
+    const messages = document.getElementById('messages');
+
+    // Нажатие кнопки "Send Message" — отправляем текст на сервер
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const text = input.value.trim();
+      if (!text) return;
+
+      socket.emit('chat message', text);
+      input.value = '';
+      input.focus();
+    });
+
+    // Подтверждение от сервера — показываем на странице
+    socket.on('message received', (data) => {
+      const li = document.createElement('li');
+      li.textContent = `${data.status}: "${data.text}" `;
+
+      const time = document.createElement('small');
+      time.textContent = `(${data.time})`;
+      li.appendChild(time);
+
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight;
+    });
+  </script>
+</body>
+</html>

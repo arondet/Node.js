@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "Products API",
+    "description": "Домашняя работа 11 — тестирование API продуктов",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /products",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:3000/products",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["products"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+              "pm.test('Возвращается массив продуктов', () => {",
+              "  const data = pm.response.json();",
+              "  pm.expect(data).to.be.an('array');",
+              "  data.forEach(p => pm.expect(p).to.have.keys('id', 'name', 'price'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /products/:id",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:3000/products/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["products", "1"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+              "pm.test('Возвращается продукт с id 1', () => {",
+              "  const p = pm.response.json();",
+              "  pm.expect(p.id).to.eql(1);",
+              "  pm.expect(p.name).to.eql('Product One');",
+              "  pm.expect(p.price).to.eql(29.99);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /products",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Product Three\",\n  \"price\": 99.99\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "http://localhost:3000/products",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["products"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Статус 201', () => pm.response.to.have.status(201));",
+              "pm.test('Создан продукт с переданными полями', () => {",
+              "  const p = pm.response.json();",
+              "  pm.expect(p.id).to.be.a('number');",
+              "  pm.expect(p.name).to.eql('Product Three');",
+              "  pm.expect(p.price).to.eql(99.99);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
